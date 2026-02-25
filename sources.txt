@@ -1,0 +1,17 @@
+Extracao das vistas
+https://blog.nitishmutha.com/equirectangular/360degree/2017/06/12/How-to-project-Equirectangular-image-to-rectilinear-view.html
+https://blogs.codingballad.com/unwrapping-the-view-transforming-360-panoramas-into-intuitive-videos-with-python-6009bd5bca94
+https://dev.to/aykhara/optimizing-satellite-image-processing-with-pyvips-4n3f
+https://kaustubh-sadekar.github.io/OmniCV-Lib/Equirectangular-to-perspective.html
+https://docs.opencv.org/4.x/d9/df8/tutorial_root.html
+
+deteccao
+https://roboflow.com/model/groundingdino
+https://blog.roboflow.com/train-classification-model-no-labeling/
+https://medium.com/@tauseefahmad12/zero-shot-object-detection-with-grounding-dino-aefe99b5a67d
+https://github.com/autodistill/autodistill-grounding-dino
+https://www.youtube.com/watch?v=oEQYStnF2l8
+
+
+BB
+https://en.wikipedia.org/wiki/Rotation_matrix

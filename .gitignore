@@ -1,0 +1,11 @@
+venv/
+.env/
+__pycache__/
+*.pyc
+*.pth
+*.pt
+*.ckpt
+*.bin
+*.safetensors
+datasets/
+weights/
