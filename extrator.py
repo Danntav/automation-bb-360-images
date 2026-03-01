@@ -14,7 +14,16 @@ def extrair_vistas(image, pitch, yaw, h, w, fov=90):
 	print(f"Yaw: {yaw}, pitch: {pitch}, fov: {fov}")
 	persp=mapper.eqruirect2persp(image, fov, pitch, yaw, h, w)
 	image_name = "img_" + str(pitch) + "_" + str(yaw) + ".jpg"
+	deteccao_items(persp, pitch, yaw)
 	cv2.imwrite(image_name, persp)
+
+
+def deteccao_items(imagem, pitch, yaw):
+	coordenadas = base_model.predict(imagem)
+	result[(pitch, yaw)]=coordenadas.xyxy
+
+
+base_model = GroundingDINO(ontology=CaptionOntology({"car": "car"}))
 
 image = cv2.imread("360.jpg")
 #cv2.imshow("Display image", image)
@@ -35,3 +44,4 @@ for current_pitch in tqdm(np.arange(-90, 90, salto_pitch)):
 	for current_yaw in np.arange(0, 360, salto_yaw):
 		extrair_vistas(image, current_pitch, current_yaw, height, width, fov)
 
+print(result)
