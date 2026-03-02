@@ -1,7 +1,7 @@
 """
 Automated Annotation Pipeline for 360° Images (Equirectangular)
 """
-
+import argparse
 import numpy as np
 import cv2
 import math
@@ -9,8 +9,16 @@ from omnicv import fisheyeImgConv
 from autodistill_grounding_dino import GroundingDINO
 from autodistill.detection import CaptionOntology
 
+# --- PATCH ---
+#The omnicv library is old and looks for np.float, which was removed in NumPy 1.24+.
+# This redirects the call to Python's native float, avoiding crash.
+if not hasattr(np, 'float'):
+    np.float = float
 
+# Stores all detections indexed by camera angle
 result = {}
+
+# Initialize GroundingDINO model with text prompt/ontology
 base_model = GroundingDINO(ontology=CaptionOntology({"car": "car"}))
 mapper = fisheyeImgConv()
 
@@ -20,11 +28,14 @@ def get_user_inputs():
     Collects scan configurations.
     """
     
-    pitch = int(input("Pitch step value (in degrees): "))
-    yaw = int(input("Yaw step value (in degress): "))
-    fov_input = int(input("FoV value in degrees (default=90): ") or 90)
- 
-    return pitch, yaw, fov
+    parser = argparse.ArgumentParser(description="Pipeline de Anotação Automatizada 360")
+    
+    parser.add_argument("--pitch", type=int, default=30, help="Pitch step(default: 30)")
+    parser.add_argument("--yaw", type=int, default=45, help="Yaw step (default: 45)")
+    parser.add_argument("--fov", type=int, default=90, help="FOV (default: 90)")
+    
+    args = parser.parse_args()
+    return args.pitch, args.yaw, args.fov
 
 
 def extract_views(image, pitch, yaw, h, w, fov=90):
@@ -43,8 +54,13 @@ def item_detection(imagem, pitch, yaw):
     """
     Performs Zero-Shot detection in plan view using GroundingDINO.
     """
+    # Runs predict model
     coordinates = base_model.predict(imagem)
+    
+    # Confidence filter
     coordinates = coordinates[coordinates.confidence > 0.55]
+    
+    #Stores the bouinding boxes
     result[(pitch, yaw)] = (coordinates.xyxy, coordinates.confidence)
 
 
@@ -108,7 +124,8 @@ def scan_spherical_image(image, step_pitch, step_yaw, height, width, fov):
     """
     Orchestrates the virtual cameras across the 360 image to extract views.
     """
-    
+    #Sweeps vertically (Pitch): from bottom (-90) to the top (90) of the sphere
+    # Sweeps horizontally (Yaw): 360 degrees
     for current_pitch in np.arange(-90, 90, step_pitch):
         for current_yaw in np.arange(0, 360, step_yaw):
             extract_views(image, current_pitch, current_yaw, height, width, fov)
@@ -145,7 +162,7 @@ def convert_to_global_coord(result_dict, image_h, image_w):
             ymin_global = min(y1, y2, y3, y4)
             ymax_global = max(y1, y2, y3, y4)
             
-            # Anti Pac-Man Filter (Cross-border issue)
+            # Cross-border issue
             if (xmax_global - xmin_global) > (image_w / 2):
                 continue
                 
@@ -155,7 +172,7 @@ def convert_to_global_coord(result_dict, image_h, image_w):
     return local_boxes, local_scores
 
 
-def apply_nms(all_boxes, all_scores, score_threshold=0.5, nms_threshold=0.4):
+def apply_nms(all_boxes, all_scores, score_threshold=0.5, nms_threshold=0.2):
     """
     Applies Non-Maximum Suppression to filter overlapping boxes. Returns a clean list.
     """
@@ -186,17 +203,17 @@ def main():
     image_path = "360.jpg"
     image = cv2.imread(image_path)
     
-    image_h, image_w, _ = image.shape
-    height, width = 512, 512
+    image_original_h, image_original_w, _ = image.shape
+    new_height, new_width = 512, 512
 
     # Get config
     step_pitch, step_yaw, fov = get_user_inputs()
 
     # Scan image and detect objects
-    scan_spherical_image(image, step_pitch, step_yaw, height, width, fov)
+    scan_spherical_image(image, step_pitch, step_yaw, new_height, new_width, fov)
     
     # Project local coordinates back to the global 360 map
-    all_boxes, all_scores = convert_to_global_coord(result, image_h, image_w)
+    all_boxes, all_scores = convert_to_global_coord(result, image_original_h, image_original_w)
     
     # NMS filter
     final_boxes = apply_nms(all_boxes, all_scores)
