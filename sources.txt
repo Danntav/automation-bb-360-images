@@ -13,5 +13,9 @@ https://github.com/autodistill/autodistill-grounding-dino
 https://www.youtube.com/watch?v=oEQYStnF2l8
 
 
-BB
+Mapping points
 https://en.wikipedia.org/wiki/Rotation_matrix
+https://stackoverflow.com/questions/14034455/translating-lat-long-to-actual-screen-x-y-coordinates-on-a-equirectangular-map
+
+BB
+https://learnopencv.com/fine-tuning-grounding-dino/
